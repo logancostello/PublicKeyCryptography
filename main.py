@@ -8,10 +8,12 @@ class User:
     def __repr__(self):
         return f"Public: {self.public_key}, Private: {self.private_key}, Symmetric: {self.symmetric_key}"
 
+    # Generates Public & Private Key Pair
     def generate_diffie_hellman_pair(self, q, alpha):
         self.private_key = randrange(q)
         self.public_key = (alpha ** self.private_key) % q # this will need to be changed later for a better func
 
+    # Generates Symmetric Key Using Other's Public Key
     def generate_secret_key(self, q, others_public):
         self.symmetric_key = (others_public ** self.private_key) % q
 
@@ -20,12 +22,15 @@ if __name__ == '__main__':
     q = 37
     alpha = 5
 
+    # Generate Users
     alice = User()
-    alice.generate_diffie_hellman_pair(q, alpha)
-
     bob = User()
+
+    # Generate Key Pairs
+    alice.generate_diffie_hellman_pair(q, alpha)
     bob.generate_diffie_hellman_pair(q, alpha)
 
+    # Generate Symmetric Key Using Other's Public Key
     alice.generate_secret_key(q, bob.public_key)
     bob.generate_secret_key(q, alice.public_key)
 
