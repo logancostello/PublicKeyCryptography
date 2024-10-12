@@ -1,4 +1,9 @@
 from random import randrange
+from random import randbytes
+import hashlib
+from Crypto.Cipher import AES
+import sys
+
 class User:
     def __init__(self):
         self.public_key = None
@@ -15,12 +20,17 @@ class User:
 
     # Generates Symmetric Key Using Other's Public Key
     def generate_secret_key(self, q, others_public):
-        self.symmetric_key = (others_public ** self.private_key) % q
+        s = (others_public ** self.private_key) % q
+        hash_obj = hashlib.sha256()
+        hash_obj.update(bytes(s))
+        self.symmetric_key = hash_obj.digest()[:16]
 
+def pad(numPadding):
+    padding = bytes([numPadding] * numPadding)
+    return padding
 
-if __name__ == '__main__':
-    q = 37
-    alpha = 5
+def simulate_diffie_hellman(q, alpha, message):
+    IV = randbytes(16)
 
     # Generate Users
     alice = User()
@@ -34,11 +44,34 @@ if __name__ == '__main__':
     alice.generate_secret_key(q, bob.public_key)
     bob.generate_secret_key(q, alice.public_key)
 
-    # FROM HERE, NEED TO ENCRYPT MESSAGES
-    # ONCE THAT WORKS, SWITCH TO LARGER Q AND ALPHA
-    # THEN SWITCH CALCULATIONS TO HANDLE LARGE NUMBERS
+    # Alice encrypts the message using her symmetric key
+    data = bytes(message.encode())
+    if len(data) > 16:
+        print("Message too long")
+        return
+    data += pad(16 - len(data))
+    alice_cipher = AES.new(alice.symmetric_key, AES.MODE_CBC, IV)
+    encrypted = alice_cipher.encrypt(data)
 
-    print(alice)
-    print(bob)
+    # Bob decrypts Alice's message using his symmetric key
+    bob_cipher = AES.new(bob.symmetric_key, AES.MODE_CBC, IV)
+    decrypted = bob_cipher.decrypt(encrypted).decode()
 
+    # Output
+    print(f"Alice's Keys: {alice}")
+    print(f"Bob's Keys: {bob}")
+    print()
+    print(f"Alice's message: {message}")
+    print(f"Alice's encrypted message: {encrypted}")
+    print(f"Bob's decrypted message: {decrypted}")
 
+if __name__ == '__main__':
+    q = 37
+    alpha = 5
+    message = "Hello Bob!"
+    simulate_diffie_hellman(q, alpha, message)
+
+    # NEXT STEP:
+    # 1. UPGRADE CALCULATIONS TO HANDLE LARGE Q AND ALPHA (FINISH TASK 1)
+    # 2. MITM ATTACK (TASK 2)
+    # 3. IMPLEMENT RSA (TASK 3)
