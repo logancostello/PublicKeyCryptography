@@ -19,7 +19,7 @@ class User:
         self.public_key = (alpha ** self.private_key) % q # this will need to be changed later for a better func
 
     # Generates Symmetric Key Using Other's Public Key
-    def generate_secret_key(self, q, others_public):
+    def generate_symmetric_key(self, q, others_public):
         s = (others_public ** self.private_key) % q
         hash_obj = hashlib.sha256()
         hash_obj.update(bytes(s))
@@ -41,8 +41,8 @@ def simulate_diffie_hellman(q, alpha, message):
     bob.generate_diffie_hellman_pair(q, alpha)
 
     # Generate Symmetric Key Using Other's Public Key
-    alice.generate_secret_key(q, bob.public_key)
-    bob.generate_secret_key(q, alice.public_key)
+    alice.generate_symmetric_key(q, bob.public_key)
+    bob.generate_symmetric_key(q, alice.public_key)
 
     # Alice encrypts the message using her symmetric key
     data = bytes(message.encode())
